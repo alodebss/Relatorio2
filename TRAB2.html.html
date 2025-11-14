@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Leis de Maxwell — Simulações Interativas</title>
+<style>
+/* --- Estilos existentes mantidos --- */
+:root {
+  --primary-dark: #1a237e;
+  --primary: #303f9f;
+  --primary-light: #7986cb;
+  --secondary: #00695c;
+  --secondary-light: #4db6ac;
+  --accent: #ff5722;
+  --accent-light: #ff8a65;
+  --background: #f5f7fa;
+  --surface: #ffffff;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --divider: #e0e0e0;
+  --success: #4caf50;
+  --warning: #ff9800;
+  --error: #f44336;
+}
+
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center;
+  background: linear-gradient(135deg, var(--primary-dark), var(--secondary), var(--accent));
+  color: white; 
+  min-height: 100vh; 
+  padding: 20px;
+  transition: background 0.5s ease;
+}
+
+.header { 
+  text-align: center; 
+  max-width: 1000px; 
+  margin-bottom: 16px; 
+  animation: fadeIn 0.8s ease;
+}
+
+h1 { 
+  font-size: 2.2rem; 
+  margin-bottom: 6px; 
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3); 
+}
+
+.subtitle { 
+  opacity: 0.95; 
+  margin-bottom: 12px; 
+  font-size: 1.1rem;
+}
+
+.tabs { 
+  display:flex; 
+  width:100%; 
+  max-width:1200px; 
+  background: rgba(255,255,255,0.15); 
+  border-radius:12px 12px 0 0; 
+  overflow:hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.tab {
+  padding:14px 18px; 
+  cursor:pointer; 
+  flex:1; 
+  text-align:center; 
+  font-weight:700;
+  transition: all 0.3s ease; 
+  user-select:none;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: var(--accent-light);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.tab:hover { 
+  background: rgba(255,255,255,0.2); 
+  transform: translateY(-2px);
+}
+
+.tab.active { 
+  background: rgba(255,255,255,0.95); 
+  color: var(--primary-dark);
+}
+
+.tab.active::after {
+  width: 100%;
+}
+
+.container {
+  width:100%; 
+  max-width:1200px; 
+  background: rgba(255,255,255,0.1); 
+  border-radius:0 0 14px 14px;
+  padding:20px; 
+  display:flex; 
+  flex-wrap:wrap; 
+  gap:20px; 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.tab-content { 
+  display:none; 
+  width:100%; 
+  gap:24px; 
+  animation: fadeIn 0.5s ease;
+}
+
+.tab-content.active { 
+  display:flex; 
+  flex-wrap:wrap; 
+}
+
+.simulation-panel, .explanation-panel {
+  background: rgba(255,255,255,0.1); 
+  padding:20px; 
+  border-radius:12px; 
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.simulation-panel:hover, .explanation-panel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.simulation-panel { 
+  flex:1; 
+  min-width:320px; 
+  max-width:700px; 
+  display:flex; 
+  flex-direction:column; 
+  align-items:center; 
+}
+
+.explanation-panel { 
+  flex:1; 
+  min-width:260px; 
+  max-width:460px; 
+  display:flex; 
+  flex-direction:column; 
+}
+
+canvas { 
+  background: rgba(0,0,0,0.3); 
+  border-radius:10px; 
+  display:block; 
+  margin:0 auto; 
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+canvas:hover {
+  transform: scale(1.01);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.controls { 
+  margin-top:16px; 
+  width:100%; 
+  display:flex; 
+  flex-direction:column; 
+  gap:14px; 
+}
+
+.slider-container { 
+  display:flex; 
+  gap:12px; 
+  align-items:center; 
+  transition: all 0.3s ease;
+}
+
+input[type="range"] { 
+  flex:1; 
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.2);
+  outline: none;
+  -webkit-appearance: none;
+  transition: all 0.3s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: var(--accent);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  background: var(--accent);
+}
+
+.charge-value { 
+  min-width:70px; 
+  text-align:center; 
+  padding:8px 10px; 
+  border-radius:8px; 
+  font-weight:700;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.positive { 
+  background: rgba(244,67,54,0.25); 
+  color:white; 
+}
+
+.negative { 
+  background: rgba(33,150,243,0.25); 
+  color:white; 
+}
+
+.buttons { 
+  display:flex; 
+  gap:10px; 
+  margin-top: 10px;
+}
+
+button { 
+  padding:10px 16px; 
+  border:none; 
+  border-radius:8px; 
+  background:var(--primary); 
+  color:white; 
+  font-weight:700; 
+  cursor:pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button:hover { 
+  transform: translateY(-3px); 
+  background:var(--primary-light);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.avatar-container { 
+  display:flex; 
+  gap:14px; 
+  align-items:center; 
+  margin-bottom:12px; 
+}
+
+.avatar { 
+  width:72px; 
+  height:72px; 
+  background:linear-gradient(135deg, var(--primary), var(--secondary)); 
+  border-radius:50%; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  font-size:2rem; 
+  position:relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.avatar::before{ 
+  content:""; 
+  position:absolute; 
+  width:100%; 
+  height:100%; 
+  border-radius:50%; 
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 60%); 
+}
+
+.avatar.talking { 
+  animation: avatar-bounce 2.6s infinite ease-in-out; 
+}
+
+@keyframes avatar-bounce { 
+  0%,100%{ transform:translateY(0) } 
+  50%{ transform:translateY(-6px)} 
+}
+
+.speech-bubble { 
+  background:white; 
+  color:var(--text-primary); 
+  padding:14px; 
+  border-radius:16px; 
+  min-height:72px; 
+  flex:1; 
+  box-shadow:0 6px 18px rgba(0,0,0,0.15);
+  opacity:0; 
+  transform:translateY(8px); 
+  transition:.4s ease;
+  display:flex; 
+  align-items:center;
+  position: relative;
+  line-height: 1.4;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid white;
+}
+
+.speech-bubble.show { 
+  opacity:1; 
+  transform:translateY(0); 
+}
+
+.speech-bubble .formula {
+  font-family: 'Times New Roman', serif;
+  font-style: italic;
+  margin: 0 2px;
+  white-space: nowrap;
+}
+
+.explanation-content { 
+  background:rgba(255,255,255,0.95); 
+  color:var(--text-primary); 
+  padding:16px; 
+  border-radius:10px; 
+  overflow:auto; 
+  max-height:420px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.legend { 
+  display:flex; 
+  gap:12px; 
+  justify-content:center; 
+  margin-top:12px; 
+  flex-wrap:wrap; 
+}
+
+.legend-item { 
+  display:flex; 
+  gap:8px; 
+  align-items:center; 
+  color:white; 
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.legend-item:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+}
+
+.legend-color { 
+  width:16px; 
+  height:16px; 
+  border-radius:4px; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+code { 
+  background: #e3f2fd; 
+  padding:4px 8px; 
+  border-radius:4px; 
+  font-family:monospace; 
+  color:#0d47a1; 
+  font-size: 0.9rem;
+}
+
+@media (max-width:900px){ 
+  .container{ padding:14px } 
+  .tabs{ flex-wrap:wrap } 
+  .tab{ font-size:0.95rem; padding: 10px 12px; } 
+  .explanation-content{ max-height:260px } 
+  .avatar{ width:60px; height:60px } 
+  .simulation-panel, .explanation-panel { padding: 16px; }
+}
+
+@media (max-width:600px) {
+  .tab-content.active { flex-direction: column; }
+  .simulation-panel, .explanation-panel { max-width: 100%; }
+  .header h1 { font-size: 1.8rem; }
+  .header .subtitle { font-size: 1rem; }
+  .speech-bubble {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>Leis de Maxwell — Simulações Interativas</h1>
+    <p class="subtitle">Explore as quatro equações fundamentais do eletromagnetismo com simulações interativas.</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Leis de Maxwell">
+    <div class="tab active" data-tab="gauss-electric">Gauss (Elétrica)</div>
+    <div class="tab" data-tab="gauss-magnetic">Gauss (Magnética)</div>
+    <div class="tab" data-tab="faraday">Faraday</div>
+    <div class="tab" data-tab="ampere-maxwell">Ampère–Maxwell</div>
+  </div>
+
+  <div class="container">
+    <!-- 1: Gauss Elétrica -->
+    <div class="tab-content active" id="gauss-electric">
+      <div class="simulation-panel">
+        <canvas id="canvasGaussE" width="640" height="420"></canvas>
+        <div class="controls">
+          <div class="slider-container">
+            <label style="width:120px">Carga (μC)</label>
+            <input id="gaussE_q" type="range" min="-100" max="100" value="50" />
+            <div id="gaussE_q_val" class="charge-value positive">+50 μC</div>
+          </div>
+          <div class="slider-container">
+            <label style="width:120px">Raio da superfície (px)</label>
+            <input id="gaussE_r" type="range" min="60" max="260" value="120" />
+            <div id="gaussE_r_val" class="charge-value">120 px</div>
+          </div>
+          <div class="buttons">
+            <button id="gaussE_reset">↺ Resetar</button>
+            <button id="gaussE_info">ℹ️ Mais info</button>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-color" style="background:#f44336"></div> Carga</div>
+          <div class="legend-item"><div class="legend-color" style="background:#4caf50"></div> Superfície Gaussiana</div>
+          <div class="legend-item"><div class="legend-color" style="background:#ffc107"></div> Linhas de campo</div>
+        </div>
+      </div>
+
+      <div class="explanation-panel">
+        <div class="avatar-container">
+          <div class="avatar">🧪</div>
+          <div class="speech-bubble" id="bubbleGaussE">
+            Lei de Gauss (Elétrica): o fluxo elétrico através de uma superfície fechada é proporcional à carga elétrica no interior dessa superfície. 
+            <span class="formula">∮<sub>S</sub> E · dA = Q<sub>enc</sub> / ε₀</span>
+          </div>
+        </div>
+        <div class="avatar-controls" style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="playGaussE">▶️ Reproduzir</button>
+          <button id="stopGaussE">⏸️ Parar</button>
+        </div>
+        <div class="explanation-content">
+          <h3>Lei de Gauss (Elétrica)</h3>
+          <p><strong>Enunciado:</strong> <em>∮<sub>S</sub> E · dA = Q<sub>enc</sub> / ε₀</em></p>
+          <p>Nesta simulação, uma carga pontual q está no centro de uma esfera (representada pelo círculo). Ajuste q e o raio da superfície gaussiana. A página calcula o campo médio na superfície e o fluxo total.</p>
+          <p><strong>Fórmulas úteis:</strong></p>
+          <p><code>E = (1/(4π ε₀)) · q / r²</code> e <code>Φ = E · A = E · 4π r² = q/ε₀</code></p>
+          <p>Observe que o fluxo é independente do raio — desde que a carga esteja dentro da superfície.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: Gauss Magnética -->
+    <div class="tab-content" id="gauss-magnetic">
+      <div class="simulation-panel">
+        <canvas id="canvasGaussB" width="640" height="420"></canvas>
+        <div class="controls">
+          <div class="slider-container">
+            <label style="width:120px">Dipolo (força)</label>
+            <input id="gaussB_m" type="range" min="0" max="100" value="40" />
+            <div id="gaussB_m_val" class="charge-value">40</div>
+          </div>
+          <div class="slider-container">
+            <label style="width:120px">Posição da superfície</label>
+            <input id="gaussB_r" type="range" min="80" max="280" value="140" />
+            <div id="gaussB_r_val" class="charge-value">140 px</div>
+          </div>
+          <div class="buttons">
+            <button id="gaussB_info">ℹ️ Mais info</button>
+            <button id="gaussB_reset">↺ Resetar</button>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-color" style="background:#00bcd4"></div> Linhas B (fechadas)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#ff9800"></div> Superfície fechada</div>
+        </div>
+      </div>
+
+      <div class="explanation-panel">
+        <div class="avatar-container">
+          <div class="avatar">🔭</div>
+          <div class="speech-bubble" id="bubbleGaussB">
+            Lei de Gauss para o magnetismo: 
+            <span class="formula">∮<sub>S</sub> B · dA = 0</span> — não existem monopolos magnéticos (linhas fechadas).
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="playGaussB">▶️ Reproduzir</button>
+          <button id="stopGaussB">⏸️ Parar</button>
+        </div>
+        <div class="explanation-content">
+          <h3>Lei de Gauss (Magnética)</h3>
+          <p><strong>Enunciado:</strong> <em>∮<sub>S</sub> B · dA = 0</em></p>
+          <p>Como demonstração, usamos um dipolo magnético (ou um par polo norte/sul) que gera linhas fechadas. Se você desenhar uma superfície fechada, o fluxo líquido entra e sai de forma compensada, resultando em zero.</p>
+          <p>Experimente mover/alterar o dipolo e a superfície; a soma do fluxo (numérico) mostrará valores próximos de zero (considerando discretização).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: Faraday -->
+    <div class="tab-content" id="faraday">
+      <div class="simulation-panel">
+        <canvas id="canvasFaraday" width="640" height="420"></canvas>
+        <div class="controls">
+          <div class="slider-container">
+            <label style="width:120px">Posição do ímã (px)</label>
+            <input id="faraday_pos" type="range" min="-220" max="220" value="-140" />
+            <div id="faraday_pos_val" class="charge-value">-140 px</div>
+          </div>
+          <div class="slider-container">
+            <label style="width:120px">Velocidade (sim)</label>
+            <input id="faraday_speed" type="range" min="0" max="6" value="1" />
+            <div id="faraday_speed_val" class="charge-value">1</div>
+          </div>
+          <div class="buttons">
+            <button id="faraday_toggle">▶️ Iniciar movimento</button>
+            <button id="faraday_info">ℹ️ Mais info</button>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-color" style="background:#f44336"></div> Ímã (N)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#2196f3"></div> Ímã (S)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#4caf50"></div> Campo B / fluxo</div>
+        </div>
+      </div>
+
+      <div class="explanation-panel">
+        <div class="avatar-container">
+          <div class="avatar">🧲</div>
+          <div class="speech-bubble" id="bubbleFaraday">
+            Lei de Faraday: uma variação do fluxo magnético induz uma força eletromotriz: 
+            <span class="formula">emf = -dΦ<sub>B</sub>/dt</span>.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="playFaraday">▶️ Reproduzir</button>
+          <button id="stopFaraday">⏸️ Parar</button>
+        </div>
+        <div class="explanation-content">
+          <h3>Lei de Faraday</h3>
+          <p><strong>Enunciado:</strong> <em>emf = - dΦ<sub>B</sub>/dt</em>, onde Φ<sub>B</sub> = ∫ B·dA</p>
+          <p>Nesta simulação um ímã se aproxima/afasta de uma espira. Quando o fluxo através da espira muda, aparece uma corrente induzida (mostrada como setas ao redor da espira) e um valor de <code>emf</code> calculado numericamente.</p>
+          <p>O sinal negativo indica a direção da corrente que tende a se opor à variação do fluxo (Lei de Lenz).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: Ampere-Maxwell -->
+    <div class="tab-content" id="ampere-maxwell">
+      <div class="simulation-panel">
+        <canvas id="canvasAmpere" width="640" height="420"></canvas>
+        <div class="controls">
+          <div class="slider-container">
+            <label style="width:150px">Corrente I (A)</label>
+            <input id="ampere_I" type="range" min="0" max="20" value="8" />
+            <div id="ampere_I_val" class="charge-value">+8 A</div>
+          </div>
+          <div class="slider-container">
+            <label style="width:150px">Variação F (Hz)</label>
+            <input id="ampere_freq" type="range" min="0" max="5" value="0.8" />
+            <div id="ampere_freq_val" class="charge-value">0.8 Hz</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+            <label style="width:150px">Mostrar corrente de deslocamento</label>
+            <input id="ampere_show_disp" type="checkbox" checked />
+          </div>
+          <div class="buttons">
+            <button id="ampere_info">ℹ️ Mais info</button>
+            <button id="ampere_reset">↺ Resetar</button>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-color" style="background:#4caf50"></div> Linhas B</div>
+          <div class="legend-item"><div class="legend-color" style="background:#ff9800"></div> Fio / Corrente</div>
+          <div class="legend-item"><div class="legend-color" style="background:#e91e63"></div> Deslocamento (E variável)</div>
+        </div>
+      </div>
+
+      <div class="explanation-panel">
+        <div class="avatar-container">
+          <div class="avatar">⚡</div>
+          <div class="speech-bubble" id="bubbleAmpere">
+            Lei de Ampère–Maxwell: 
+            <span class="formula">∮ B·dl = μ₀ I<sub>enc</sub> + μ₀ ε₀ dΦ<sub>E</sub>/dt</span> (adição de Maxwell).
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button id="playAmpere">▶️ Reproduzir</button>
+          <button id="stopAmpere">⏸️ Parar</button>
+        </div>
+        <div class="explanation-content">
+          <h3>Ampère–Maxwell</h3>
+          <p><strong>Enunciado (forma integral):</strong> <em>∮ B·dl = μ₀ I<sub>enc</sub> + μ₀ ε₀ dΦ<sub>E</sub>/dt</span></em></p>
+          <p>Nesta simulação, um fio percorre corrente I(t) = I₀ sin(2π f t). Linhas magnéticas circulam ao redor. Se a corrente varia, aparece um termo extra se existir uma região com campo elétrico variável (corrente de deslocamento).</p>
+          <p>Você pode alternar a exibição da corrente de deslocamento (que modelamos qualitativamente entre placas de um capacitor fictício).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ===== Utilitários e síntese de voz (estilo do seu arquivo) ===== */
+const epsilon0 = 8.854187817e-12;
+const mu0 = 4*Math.PI*1e-7;
+
+// Voz e avatar
+const speechSupported = 'speechSynthesis' in window;
+let femaleVoice = null;
+function findFemaleVoice(){
+  if(!speechSupported) return null;
+  const voices = speechSynthesis.getVoices();
+  const female = voices.filter(v=>v.lang.startsWith('pt')).find(v=>{
+    const n=v.name.toLowerCase();
+    return n.includes('ana')||n.includes('maria')||n.includes('female')||n.includes('mulher')||n.includes('woman');
+  });
+  return female || voices.find(v=>v.lang.startsWith('pt')) || null;
+}
+function initVoice(){
+  femaleVoice = findFemaleVoice();
+  if(!femaleVoice && speechSupported){
+    speechSynthesis.addEventListener('voiceschanged', ()=> femaleVoice = findFemaleVoice());
+  }
+}
+function speak(text,rate=0.95,pitch=1){
+  if(!speechSupported) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang='pt-BR'; u.rate=rate; u.pitch=pitch;
+  if(femaleVoice) u.voice = femaleVoice;
+  speechSynthesis.speak(u);
+}
+initVoice();
+
+/* ===== sistema de abas ===== */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    // Adicionar efeito visual de clique
+    tab.style.transform = 'scale(0.98)';
+    setTimeout(() => {
+      tab.style.transform = '';
+    }, 150);
+    
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    tab.classList.add('active');
+    const id = tab.dataset.tab;
+    const content = document.getElementById(id);
+    content.classList.add('active');
+    
+    // Adicionar animação de entrada
+    content.classList.add('fade-in');
+    setTimeout(() => {
+      content.classList.remove('fade-in');
+    }, 500);
+    
+    // quando trocar de aba, falar breve resumo
+    const bubble = document.querySelector('#'+id+' .speech-bubble');
+    if(bubble){
+      bubble.classList.add('show');
+      document.querySelectorAll('.avatar').forEach(a=>a.classList.remove('talking'));
+      const avatar = document.querySelector('#'+id+' .avatar');
+      if(avatar) avatar.classList.add('talking');
+      // Remover tags HTML para a síntese de voz
+      const cleanText = bubble.textContent || bubble.innerText;
+      speak(cleanText);
+      setTimeout(()=>{ bubble.classList.remove('show'); avatar.classList.remove('talking'); },6000);
+    }
+  });
+});
+
+/* ===== 1. Gauss elétrica (canvasGaussE) ===== */
+(function(){
+  const canvas = document.getElementById('canvasGaussE');
+  const ctx = canvas.getContext('2d');
+  const qSlider = document.getElementById('gaussE_q');
+  const qVal = document.getElementById('gaussE_q_val');
+  const rSlider = document.getElementById('gaussE_r');
+  const rVal = document.getElementById('gaussE_r_val');
+  const resetBtn = document.getElementById('gaussE_reset');
+  const infoBtn = document.getElementById('gaussE_info');
+  const bubble = document.getElementById('bubbleGaussE');
+  let q = parseFloat(qSlider.value); // μC
+  let radius = parseFloat(rSlider.value);
+  const center = {x: canvas.width/2, y: canvas.height/2};
+  const k = 8.9875517923e9;
+
+  function updateLabels(){
+    qVal.textContent = (q>=0?'+':'')+q.toFixed(0)+' μC';
+    qVal.className = 'charge-value '+(q>=0?'positive':'negative');
+    rVal.textContent = Math.round(radius)+' px';
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    // fundo sutil
+    const gr = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    gr.addColorStop(0,'rgba(26,35,126,0.7)'); gr.addColorStop(1,'rgba(0,105,92,0.7)');
+    ctx.fillStyle = gr; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // desenhar algumas linhas de campo radiais (simples)
+    const N = 18;
+    ctx.lineWidth = 1.2;
+    for(let i=0;i<N;i++){
+      const ang = (i/N)*Math.PI*2;
+      // desenhar desde carga até fora
+      const maxr = Math.min(260, Math.max(40, radius+90));
+      ctx.beginPath();
+      for(let s=8;s<=maxr;s+=6){
+        const x = center.x + s*Math.cos(ang);
+        const y = center.y + s*Math.sin(ang);
+        if(s===8) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle = (q>=0? 'rgba(255,193,7,0.85)':'rgba(33,150,243,0.85)');
+      ctx.stroke();
+
+      // arrow at outside
+      const ax = center.x + maxr*Math.cos(ang), ay = center.y + maxr*Math.sin(ang);
+      ctx.beginPath();
+      ctx.fillStyle = (q>=0? 'rgba(255,193,7,0.95)':'rgba(33,150,243,0.95)');
+      ctx.moveTo(ax,ay);
+      ctx.lineTo(ax-6*Math.cos(ang-Math.PI/8), ay-6*Math.sin(ang-Math.PI/8));
+      ctx.lineTo(ax-6*Math.cos(ang+Math.PI/8), ay-6*Math.sin(ang+Math.PI/8));
+      ctx.closePath(); ctx.fill();
+    }
+
+    // desenhar superfície gaussiana
+    ctx.beginPath(); ctx.strokeStyle = '#4caf50'; ctx.lineWidth=2; ctx.setLineDash([6,6]);
+    ctx.arc(center.x, center.y, radius, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+
+    // desenhar carga pontual
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, 14, 0, Math.PI*2);
+    ctx.fillStyle = q>=0? '#f44336':'#2196f3'; ctx.fill();
+    ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='white'; ctx.font='bold 14px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(q>=0?'+':'-', center.x, center.y);
+
+    // cálculos — converter μC -> C, px->m (número arbitrário: tratar 1px = 1e-2 m para ex. didático)
+    const qC = q*1e-6;
+    const r_m = radius*1e-2; // 1 px = 1 cm modelado
+    const E = (4*Math.PI*epsilon0===0?0: (1/(4*Math.PI*epsilon0))*Math.abs(qC)/(r_m*r_m)); // SI
+    // flux pelo lado matemático (Φ = q/ε0)
+    const flux = qC/epsilon0;
+    // mostrar texto
+    ctx.fillStyle='white'; ctx.font='13px Arial'; ctx.textAlign='left';
+    ctx.fillText('Φ = Q_enc / ε₀', 16, 20);
+    ctx.fillText('Q_enc = '+q.toFixed(2)+' μC → '+(qC).toExponential(2)+' C', 16, 40);
+    ctx.fillText('Φ ≈ '+(flux).toExponential(3)+' Wb', 16, 60);
+    ctx.fillText('E (na superfície) ≈ '+(E).toExponential(3)+' N/C', 16, 80);
+  }
+
+  qSlider.addEventListener('input',()=>{ q = parseFloat(qSlider.value); updateLabels(); draw(); });
+  rSlider.addEventListener('input',()=>{ radius = parseFloat(rSlider.value); updateLabels(); draw(); });
+  resetBtn.addEventListener('click',()=>{ 
+    qSlider.value=50; rSlider.value=120; q=50; radius=120; 
+    updateLabels(); 
+    draw(); 
+    // Efeito visual de reset
+    resetBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      resetBtn.style.transform = '';
+    }, 200);
+  });
+  infoBtn.addEventListener('click',()=>{ showBubble(bubble); });
+
+  function showBubble(b){ b.classList.add('show'); document.querySelector('#gauss-electric .avatar').classList.add('talking'); speak(b.textContent); setTimeout(()=>{ b.classList.remove('show'); document.querySelector('#gauss-electric .avatar').classList.remove('talking'); },5000); }
+
+  updateLabels(); draw();
+})();
+
+/* ===== 2. Gauss magnética (linhas fechadas) ===== */
+(function(){
+  const canvas = document.getElementById('canvasGaussB');
+  const ctx = canvas.getContext('2d');
+  const mSlider = document.getElementById('gaussB_m');
+  const rSlider = document.getElementById('gaussB_r');
+  const mVal = document.getElementById('gaussB_m_val');
+  const rVal = document.getElementById('gaussB_r_val');
+  const infoBtn = document.getElementById('gaussB_info');
+  const resetBtn = document.getElementById('gaussB_reset');
+  const bubble = document.getElementById('bubbleGaussB');
+  let m = parseFloat(mSlider.value);
+  let radius = parseFloat(rSlider.value);
+  const center = {x: canvas.width/2, y: canvas.height/2};
+  function updateLabels(){ mVal.textContent = Math.round(m); rVal.textContent = Math.round(radius); }
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const gr = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    gr.addColorStop(0,'rgba(26,35,126,0.7)'); gr.addColorStop(1,'rgba(0,105,92,0.7)');
+    ctx.fillStyle = gr; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // dipolo simples: desenhar duas regiões representando N e S
+    // norte (left) and sul (right) visual
+    const dx = 36 + (m/100)*28;
+    ctx.beginPath();
+    ctx.fillStyle='#f44336'; ctx.ellipse(center.x-dx, center.y, 22, 32, 0, 0, 2*Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.fillStyle='#2196f3'; ctx.ellipse(center.x+dx, center.y, 22, 32, 0, 0, 2*Math.PI); ctx.fill();
+    // linhas fechadas: círculos e linhas que saem do norte e entram no sul
+    ctx.strokeStyle = '#00bcd4'; ctx.lineWidth = 1.5;
+    for(let i=0;i<12;i++){
+      const radiusLine = 30 + i*12;
+      ctx.beginPath();
+      // curve from N around to S to show closed loops: approximate by ellipse arcs
+      ctx.ellipse(center.x, center.y, radiusLine, radiusLine*0.6, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
+    // desenhar superfície fechada (círculo)
+    ctx.beginPath(); ctx.setLineDash([6,6]); ctx.strokeStyle='#ff9800'; ctx.lineWidth=2; ctx.arc(center.x, center.y, radius, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+
+    // estimativa de fluxo numérico (discretizado): somamos B·dA ao longo de uma malha dentro do círculo
+    // model: campo radial fraco ao longe, forte próximo ao dipolo; usamos função simplificada B ~ m * cos(theta)/r^3
+    const shell = radius;
+    const N = 28;
+    let flux = 0;
+    for(let ix=0; ix<N; ix++){
+      for(let iy=0; iy<N; iy++){
+        const x = center.x - shell + (2*shell)*(ix/(N-1));
+        const y = center.y - shell + (2*shell)*(iy/(N-1));
+        const dx0 = x - center.x, dy0 = y - center.y;
+        const rr = Math.sqrt(dx0*dx0 + dy0*dy0);
+        if(rr>radius) continue;
+        // simple dipole field z-component approximation (2D projection): Bz ~ m*(2*cos(theta))/r^3
+        const theta = Math.atan2(dy0, dx0);
+        const Bz = (m/50) * (Math.cos(theta)) / Math.pow(Math.max(rr,8),3);
+        flux += Bz * ( (2*shell)/(N-1) )*( (2*shell)/(N-1) ); // px^2 proxy
+      }
+    }
+    // mostrar valor (apenas qualitativo)
+    ctx.fillStyle='white'; ctx.font='13px Arial';
+    ctx.fillText('Fluxo líquido (aprox., unidades arbitrárias): '+flux.toFixed(3), 12, 20);
+    ctx.fillText('Lei: ∮ B·dA = 0 (linhas fechadas, sem monopolos)', 12, 40);
+  }
+
+  mSlider.addEventListener('input',()=>{ m = parseFloat(mSlider.value); updateLabels(); draw(); });
+  rSlider.addEventListener('input',()=>{ radius = parseFloat(rSlider.value); updateLabels(); draw(); });
+  infoBtn.addEventListener('click',()=>{ bubble.classList.add('show'); document.querySelector('#gauss-magnetic .avatar').classList.add('talking'); speak(bubble.textContent); setTimeout(()=>{ bubble.classList.remove('show'); document.querySelector('#gauss-magnetic .avatar').classList.remove('talking'); },5200); });
+  resetBtn.addEventListener('click',()=>{ 
+    mSlider.value=40; rSlider.value=140; m=40; radius=140; 
+    updateLabels(); 
+    draw();
+    // Efeito visual de reset
+    resetBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      resetBtn.style.transform = '';
+    }, 200);
+  });
+
+  updateLabels(); draw();
+})();
+
+/* ===== 3. Faraday (ímã + espira) ===== */
+(function(){
+  const canvas = document.getElementById('canvasFaraday');
+  const ctx = canvas.getContext('2d');
+  const posSlider = document.getElementById('faraday_pos');
+  const posVal = document.getElementById('faraday_pos_val');
+  const speedSlider = document.getElementById('faraday_speed');
+  const speedVal = document.getElementById('faraday_speed_val');
+  const toggleBtn = document.getElementById('faraday_toggle');
+  const infoBtn = document.getElementById('faraday_info');
+  const bubble = document.getElementById('bubbleFaraday');
+  let x = parseFloat(posSlider.value);
+  let speed = parseFloat(speedSlider.value);
+  let running = false;
+  let lastTime = null;
+  const center = {x: canvas.width/2, y: canvas.height/2};
+
+  posSlider.addEventListener('input', ()=>{ x = parseFloat(posSlider.value); posVal.textContent = Math.round(x); draw(); });
+  speedSlider.addEventListener('input', ()=>{ speed = parseFloat(speedSlider.value); speedVal.textContent = speed.toFixed(1); });
+  toggleBtn.addEventListener('click', ()=>{
+    running = !running;
+    toggleBtn.textContent = running? '⏸️ Pausar movimento' : '▶️ Iniciar movimento';
+    // Efeito visual de toggle
+    toggleBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      toggleBtn.style.transform = '';
+    }, 200);
+    if(running){ lastTime = performance.now(); requestAnimationFrame(step); }
+  });
+  infoBtn.addEventListener('click', ()=>{ bubble.classList.add('show'); document.querySelector('#faraday .avatar').classList.add('talking'); speak(bubble.textContent); setTimeout(()=>{ bubble.classList.remove('show'); document.querySelector('#faraday .avatar').classList.remove('talking'); },5200); });
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const gr = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    gr.addColorStop(0,'rgba(26,35,126,0.7)'); gr.addColorStop(1,'rgba(0,105,92,0.7)');
+    ctx.fillStyle=gr; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // desenhar espira (círculo)
+    const R = 90;
+    ctx.beginPath(); ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; ctx.arc(center.x, center.y, R, 0, Math.PI*2); ctx.stroke();
+
+    // desenhar ímã como dois blocos, pos x variável (x in pixels from center)
+    const magnetX = center.x + x;
+    ctx.fillStyle='#f44336'; ctx.fillRect(magnetX-28, center.y-40, 28,80); // N
+    ctx.fillStyle='#2196f3'; ctx.fillRect(magnetX, center.y-40, 28,80); // S
+    // desenhar campo simplificado (linhas de B)
+    for(let i=0;i<20;i++){
+      // linhas que emanam do polo N para região S: gera arcos
+      const t = i/20;
+      const startY = center.y - 80 + i*8;
+      ctx.beginPath();
+      ctx.moveTo(magnetX-28, startY);
+      const cp1x = magnetX-10; const cp1y = startY - 30 - Math.abs(x)/6;
+      const cp2x = center.x - (t-0.5)*40; const cp2y = center.y + (t-0.5)*20 + Math.abs(x)/8;
+      ctx.bezierCurveTo(cp1x,cp1y, cp2x,cp2y, center.x + Math.cos(t*Math.PI*2)*R*0.9, center.y + Math.sin(t*Math.PI*2)*R*0.9);
+      ctx.strokeStyle = 'rgba(76,175,80,0.4)'; ctx.lineWidth=1; ctx.stroke();
+    }
+
+    // calcular fluxo (aprox) — assumimos B diminui com distância; integrar B over area of circle using sampling
+    const samples = 40;
+    let flux = 0;
+    for(let i=0;i<samples;i++){
+      for(let j=0;j<samples;j++){
+        const rx = -R + (2*R)*(i/(samples-1));
+        const ry = -R + (2*R)*(j/(samples-1));
+        if(rx*rx+ry*ry>R*R) continue;
+        // posição point in canvas coords
+        const px = center.x + rx, py = center.y + ry;
+        // distance to magnet center
+        const d = Math.hypot(px - magnetX, py - center.y);
+        // B_z approx: positive when N near, negative when S near. model simple: B ~ A / (d^2+30)
+        const sign = (px < magnetX) ? 1 : -1;
+        const B = sign * (1200 / (d*d + 900));
+        flux += B * ( (2*R)/(samples-1) * (2*R)/(samples-1) ); // px^2 proxy
+      }
+    }
+    // dPhi/dt: approximate by comparing with a slightly shifted position according to speed
+    const dx = (running? speed*2 * Math.sign(-x) : 0.0001); // quick approx
+    const x2 = x + dx;
+    // compute flux2 quickly (coarse)
+    let flux2 = 0;
+    for(let i=0;i<20;i++){
+      for(let j=0;j<20;j++){
+        const rx = -R + (2*R)*(i/(19));
+        const ry = -R + (2*R)*(j/(19));
+        if(rx*rx+ry*ry>R*R) continue;
+        const px = center.x + rx, py = center.y + ry;
+        const d = Math.hypot(px - (center.x + x2), py - center.y);
+        const sign = (px < center.x + x2) ? 1 : -1;
+        const B = sign * (1200 / (d*d + 900));
+        flux2 += B * ( (2*R)/(19) * (2*R)/(19) );
+      }
+    }
+    const emf = -(flux2 - flux) * (speed); // arbitrary scaling to show change
+    // desenhar leituras
+    ctx.fillStyle='white'; ctx.font='13px Arial';
+    ctx.fillText('Flux (aprox., unidades arbit.): '+flux.toFixed(1), 12, 20);
+    ctx.fillText('emf (aprox., sinais relativos): '+emf.toFixed(2), 12, 40);
+    ctx.fillText('Direção da corrente induzida (setas) mostra Lenz', 12, 60);
+
+    // desenhar setas de corrente ao redor da espira proporcional ao emf
+    const arrowCount = 18;
+    const magnitude = Math.min(1.6, Math.abs(emf)/80);
+    for(let i=0;i<arrowCount;i++){
+      const ang = (i/arrowCount)*Math.PI*2;
+      const ax = center.x + (R+14)*Math.cos(ang);
+      const ay = center.y + (R+14)*Math.sin(ang);
+      // direção: if emf>0, current clockwise (define arbitrarily)
+      const dir = emf>0?1:-1;
+      const aAng = ang + (dir>0?Math.PI/2:-Math.PI/2);
+      ctx.beginPath();
+      ctx.moveTo(ax,ay);
+      ctx.lineTo(ax + 10* Math.cos(aAng), ay + 10*Math.sin(aAng));
+      ctx.strokeStyle = 'rgba(255,193,7,'+ (0.3 + magnitude) +')'; ctx.lineWidth = 2; ctx.stroke();
+      // triangle head
+      ctx.beginPath(); ctx.fillStyle = 'rgba(255,193,7,'+ (0.5+magnitude) +')';
+      ctx.moveTo(ax + 10*Math.cos(aAng), ay + 10*Math.sin(aAng));
+      ctx.lineTo(ax + 6*Math.cos(aAng-Math.PI/10), ay + 6*Math.sin(aAng-Math.PI/10));
+      ctx.lineTo(ax + 6*Math.cos(aAng+Math.PI/10), ay + 6*Math.sin(aAng+Math.PI/10));
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function step(ts){
+    if(!running) return;
+    if(!lastTime) lastTime = ts;
+    const dt = (ts - lastTime)/1000;
+    lastTime = ts;
+    // desloca x em direção ao centro e volta
+    const dir = (x < 220) ? 1 : -1;
+    x += dir * speed * 6 * dt * (Math.sign(-x) || 1); // movimento oscilatório próximo ao centro
+    // clamp
+    if(x>220) x=220; if(x<-220) x=-220;
+    posSlider.value = x; posVal.textContent = Math.round(x);
+    draw();
+    requestAnimationFrame(step);
+  }
+
+  posSlider.addEventListener('input', ()=>{ x = parseFloat(posSlider.value); posVal.textContent = Math.round(x); draw(); });
+  speedSlider.addEventListener('input', ()=>{ speed = parseFloat(speedSlider.value); speedVal.textContent = speed; });
+  draw();
+})();
+
+/* ===== 4. Ampère–Maxwell (campo B ao redor de fio + deslocamento) ===== */
+(function(){
+  const canvas = document.getElementById('canvasAmpere');
+  const ctx = canvas.getContext('2d');
+  const I_slider = document.getElementById('ampere_I');
+  const freq_slider = document.getElementById('ampere_freq');
+  const disp_check = document.getElementById('ampere_show_disp');
+  const I_val = document.getElementById('ampere_I_val');
+  const freq_val = document.getElementById('ampere_freq_val');
+  const infoBtn = document.getElementById('ampere_info');
+  const resetBtn = document.getElementById('ampere_reset');
+  const bubble = document.getElementById('bubbleAmpere');
+  let I0 = parseFloat(I_slider.value);
+  let freq = parseFloat(freq_slider.value);
+  let t0 = performance.now();
+
+  function updateLabels(){ I_val.textContent = (I0>=0?'+':'')+I0.toFixed(1)+' A'; freq_val.textContent = freq.toFixed(2)+' Hz'; }
+  I_slider.addEventListener('input', ()=>{ I0 = parseFloat(I_slider.value); updateLabels(); });
+  freq_slider.addEventListener('input', ()=>{ freq = parseFloat(freq_slider.value); updateLabels(); });
+  infoBtn.addEventListener('click', ()=>{ bubble.classList.add('show'); document.querySelector('#ampere-maxwell .avatar').classList.add('talking'); speak(bubble.textContent); setTimeout(()=>{ bubble.classList.remove('show'); document.querySelector('#ampere-maxwell .avatar').classList.remove('talking'); },5200); });
+  resetBtn.addEventListener('click', ()=>{ 
+    I_slider.value=8; freq_slider.value=0.8; I0=8; freq=0.8; 
+    updateLabels(); 
+    // Efeito visual de reset
+    resetBtn.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      resetBtn.style.transform = '';
+    }, 200);
+  });
+
+  function draw(ts){
+    const now = ts || performance.now();
+    const tau = (now - t0)/1000;
+    // corrente senoidal
+    const I = I0 * Math.sin(2*Math.PI*freq*tau);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const gr = ctx.createLinearGradient(0,0,canvas.width,canvas.height); 
+    gr.addColorStop(0,'rgba(26,35,126,0.7)'); gr.addColorStop(1,'rgba(0,105,92,0.7)');
+    ctx.fillStyle=gr; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // desenhar fio vertical no centro
+    const cx = canvas.width/2, cy = canvas.height/2;
+    ctx.beginPath(); ctx.fillStyle='#ff9800'; ctx.arc(cx, cy, 16, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle='white'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='white'; ctx.font='20px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(I>0? '⊙':'⊗', cx, cy);
+
+    // desenhar linhas B: círculos concêntricos, intensidade proporcional a I/r
+    ctx.lineWidth=1.6;
+    const maxR = 180;
+    for(let r=36;r<maxR;r+=22){
+      ctx.beginPath(); ctx.strokeStyle='rgba(76,175,80,'+ (Math.min(1, Math.abs(I)/(6) )) +')';
+      ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+      // setas: tangential triangles moving according to sign(I)
+      const circumference = 2*Math.PI*r;
+      const positions = Math.max(6, Math.floor(circumference/48));
+      for(let p=0;p<positions;p++){
+        const ang = (p/positions)*Math.PI*2 + (I>0? (now/5000):( -now/5000 ));
+        const x = cx + r*Math.cos(ang), y = cy + r*Math.sin(ang);
+        const tangent = ang + (I>0? Math.PI/2 : -Math.PI/2);
+        ctx.save(); ctx.translate(x,y); ctx.rotate(tangent);
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-8,-5); ctx.lineTo(-8,5); ctx.closePath();
+        ctx.fillStyle='rgba(76,175,80,0.9)'; ctx.fill(); ctx.restore();
+      }
+    }
+
+    // corrente de deslocamento (se ativo): mostramos E variável entre placas de um capacitor fictício e calculamos dΦ_E/dt ~ d/dt(E*A)
+    if(disp_check.checked){
+      // desenhar placas como capacitor acima do fio
+      const plateW = 120, plateH = 12;
+      ctx.fillStyle='rgba(255,255,200,0.9)'; ctx.fillRect(cx-plateW-10, cy-70, plateW, plateH);
+      ctx.fillRect(cx+10, cy-70, plateW, plateH);
+      // E field between plates proporcional to dV/dt ~ derivative of I (qualitativo)
+      const dI_dt = 2*Math.PI*freq*I0 * Math.cos(2*Math.PI*freq * ((now-t0)/1000));
+      const Evar = dI_dt*0.02; // scaling
+      // desenho de linhas E entre as placas
+      ctx.strokeStyle='rgba(233,30,99,0.85)'; ctx.setLineDash([4,3]);
+      for(let i=0;i<8;i++){
+        const sx = cx-plateW + (i/7)*plateW*2 + 8;
+        ctx.beginPath(); ctx.moveTo(sx, cy-58); ctx.lineTo(sx, cy-20); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      // mostrar valor qualitativo do termo de deslocamento
+      ctx.fillStyle='white'; ctx.font='13px Arial'; ctx.fillText('dΦ_E/dt (qualitativo): '+Evar.toFixed(4), 100, 20);
+    } else {
+      ctx.fillStyle='white'; ctx.font='13px Arial'; ctx.fillText('Deslocamento oculto (marque para visualizar)', 100, 40);
+    }
+
+    // legendas e I(t)
+    ctx.fillStyle='white'; ctx.font='13px Arial'; ctx.fillText('I(t) = I₀ sin(2π f t) → I = '+I.toFixed(2)+' A', 100, 40);
+    requestAnimationFrame(draw);
+  }
+
+  updateLabels();
+  requestAnimationFrame(draw);
+})();
+
+/* ===== pequenos utilitários para 'play' / 'stop' nas abas e bolhas ===== */
+function showBubble(b) {
+  b.classList.add('show');
+  const avatar = b.parentElement.querySelector('.avatar');
+  if(avatar) avatar.classList.add('talking');
+  // Remover tags HTML para a síntese de voz
+  const cleanText = b.textContent || b.innerText;
+  speak(cleanText);
+  setTimeout(()=>{ b.classList.remove('show'); if(avatar) avatar.classList.remove('talking'); },5000);
+}
+
+/* atribuir botões de reprodução das explicações */
+document.getElementById('playGaussE').addEventListener('click', ()=> showBubble(document.getElementById('bubbleGaussE')));
+document.getElementById('playGaussB').addEventListener('click', ()=> showBubble(document.getElementById('bubbleGaussB')));
+document.getElementById('playFaraday').addEventListener('click', ()=> showBubble(document.getElementById('bubbleFaraday')));
+document.getElementById('playAmpere').addEventListener('click', ()=> showBubble(document.getElementById('bubbleAmpere')));
+
+// Função para parar todas as falas
+function stopAllSpeech() {
+  if(speechSupported) speechSynthesis.cancel();
+  document.querySelectorAll('.avatar').forEach(a=>a.classList.remove('talking'));
+  document.querySelectorAll('.speech-bubble').forEach(b=>b.classList.remove('show'));
+}
+
+document.getElementById('stopGaussE').addEventListener('click', stopAllSpeech);
+document.getElementById('stopGaussB').addEventListener('click', stopAllSpeech);
+document.getElementById('stopFaraday').addEventListener('click', stopAllSpeech);
+document.getElementById('stopAmpere').addEventListener('click', stopAllSpeech);
+
+</script>
+</body>
+</html>
